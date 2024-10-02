@@ -1,0 +1,133 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+typedef int stack_elem_t;
+const int N = 2;
+const int L_CANARY = 0xDEADF00D;
+const int R_CANARY = 0xBADC0FFE;
+const int TOXIC = 0xDED32;
+
+void stack_ctor(struct Stack_t* stk);
+void up_cap(struct Stack_t* stk);
+void stack_push(struct Stack_t* stk, stack_elem_t push); // TODO: принимать элемент (или указатель на него)
+void stack_pop(struct Stack_t* stk);  
+void stack_dtor(struct Stack_t* stk);  ////////////////////
+void dump(struct Stack_t* stk);
+void low_cap(struct Stack_t* stk);
+void verification(struct Stack_t* stk);
+
+struct Stack_t
+{
+    size_t size;
+    size_t capacity;
+    stack_elem_t* data;
+    stack_elem_t pop_element;
+};
+
+int main()
+{
+    Stack_t stk  = {};
+    stack_ctor(&stk);
+    printf("0 - finish the programm\n 1 - print stack\n 2 - push the element\n 3 - pop the element\n 4 - check info\n");
+    int programm_options = -1;
+    scanf("%d", &programm_options);
+    while (programm_options != 0)
+    {
+        switch (programm_options)
+        {
+        case 1:
+            printf("currernt stack\n");
+            for (size_t i = 0; i < stk.size; i++)
+            {
+                printf("%d ", stk.data[i]);
+            }
+            printf("\n");
+            break;
+        case 2:
+            stack_elem_t push;
+            printf("Write number to add to the stack\n");
+            scanf("%d", &push);
+            stack_push(&stk, push); 
+            break;  
+        case 3:
+            stack_pop(&stk);
+            printf("pop element = %d\n", stk.pop_element);
+            break;
+        case 4:
+            dump(&stk);
+            verification(&stk);
+            break;
+        default:
+        printf("wrong options");
+            break;
+        }
+        printf("Choose programm options\n");
+        scanf("%d", &programm_options);
+    }
+    stack_dtor(&stk);
+    return 0;
+}
+
+void stack_ctor(struct Stack_t* stk)
+{
+    stk->size = 0;
+    stk->capacity = N;
+    stk->data = (stack_elem_t*) calloc(stk->capacity, sizeof(stack_elem_t));
+}
+void up_cap(struct Stack_t* stk)
+{
+    stk->capacity *= 2;
+    stk->data = (stack_elem_t*) realloc(stk->data, stk->capacity);
+}
+
+void stack_push(struct Stack_t* stk, stack_elem_t push)
+{
+    verification(stk);
+    if (stk->capacity <= stk->size)
+    {
+        up_cap(stk);
+    }
+    stk->size+=1;
+    stk->data[stk->size] = push;
+    verification(stk);
+}
+
+void stack_pop(struct Stack_t* stk)
+{
+    verification(stk);
+    if (stk->capacity > 3 * stk->size)
+    {
+        low_cap(stk);
+        verification(stk);
+    }
+    stk->pop_element = stk->data[stk->size]; 
+    stk->data[stk->size] = '\0'; //????
+    stk->size--;
+    verification(stk);
+}
+
+void low_cap(struct Stack_t* stk)
+{
+    stk->capacity /=2;
+    stk->data = (stack_elem_t*) realloc(stk->data, stk->capacity);  //realloс
+    stk->capacity /=2;       
+}
+
+void dump(struct Stack_t* stk) // TODO:verift указатели, ядовитые числа, сравнение размера и емкости 
+{
+    printf("size stack  = %d\n", stk->size);
+    printf("capacity stack  = %d\n", stk->capacity);
+    printf("last pop element  = %d\n", stk->pop_element);
+}
+
+void stack_dtor(struct Stack_t* stk)
+{
+    free(stk->data);
+}
+void verification(struct Stack_t* stk)
+{
+    assert(stk->data != 0);
+    assert(stk->size < stk->capacity);
+}
+
+
